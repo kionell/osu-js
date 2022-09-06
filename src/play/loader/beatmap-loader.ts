@@ -159,6 +159,7 @@ export const loadBeatmapStep =
             );
           }
           const osbString = await osbFiles[0]?.async("string");
+
           loaded.storyboard = new StoryboardDecoder().decodeFromString(
             osuString!,
             osbString
@@ -243,7 +244,7 @@ export const loadBeatmapStep =
           loaded.audio = await loadSound({
             src: (await blobUrlFromFile(audioFile)) as string,
             html5: !isUsingIOS,
-            preload: !isUsingIOS ? "metadata" : true,
+            preload: true,
             format: audioFile.name.substring(
               audioFile.name.lastIndexOf(".") + 1
             ),
