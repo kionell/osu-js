@@ -8,11 +8,15 @@ import {
 
 import { BLEND_MODES, Sprite, utils } from "pixi.js";
 import { STORYBOARD_BRIGHTNESS, STORYBOARD_ORIGIN_MAP } from "../../constants";
-import { IUpdatable, Timeline, TimelineElement } from "../../game/timeline";
+import { 
+  DOTimelineInstance, 
+  Timeline, 
+  TimelineElement 
+} from "../../game/timeline";
 
 export abstract class DrawableStoryboardElement<T extends IStoryboardElement>
   extends Sprite
-  implements IUpdatable
+  implements DOTimelineInstance
 {
   protected object: T;
 
@@ -42,13 +46,11 @@ export abstract class DrawableStoryboardElementWithCommands
     this.position.copyFrom(object.startPosition);
     this.anchor.copyFrom(STORYBOARD_ORIGIN_MAP.get(object.origin)!);
 
-    this.commandTimeline = new Timeline(
-      object.commands.map(this.createElement),
-      null,
-      this.updateCommand,
-      this.finalizeCommand,
-      false
-    );
+    this.commandTimeline = new Timeline({
+      elements: object.commands.map(this.createElement),
+      updateElement: this.updateCommand,
+      destroyElement: this.finalizeCommand,
+    });
 
     this.setDefaultValues();
   }

@@ -1,3 +1,5 @@
+import { IPointData } from "pixi.js";
+import { MathUtils, Easing, BinarySearch } from "osu-classes";
 import {
   Circle,
   Slider,
@@ -5,8 +7,6 @@ import {
   StandardHitObject,
 } from "osu-standard-stable";
 import { Cursor } from "./cursor";
-import { MathUtils, Easing } from "osu-classes";
-import { IPointData } from "pixi.js";
 
 const MAX_CLICK_PROPORTION = 0.5;
 const MAX_CLICK_DURATION = 50;
@@ -28,14 +28,15 @@ export default class CursorAutoplay extends Cursor {
   }
 
   getCursorState(timeMs: number): CursorState {
-    while (
+    for (
+      this.nextHitObjectIndex = this.getNextHitObjectIndex(timeMs);
       this.nextHitObjectIndex < this.hitObjects.length &&
-      this.hitObjects[this.nextHitObjectIndex].startTime <= timeMs
-    ) {
-      this.nextHitObjectIndex++;
-    }
+      this.hitObjects[this.nextHitObjectIndex].startTime <= timeMs;
+      this.nextHitObjectIndex++
+    );
 
     const nextHitObject = this.hitObjects[this.nextHitObjectIndex];
+
     if (this.nextHitObjectIndex == 0) {
       return { pos: nextHitObject.stackedStartPosition, expanded: false };
     }
@@ -59,33 +60,34 @@ export default class CursorAutoplay extends Cursor {
     if (timeMs < currentEndTime) {
       // Within a hit object
       if (currentHitObject instanceof Slider) {
-        const progress =
-          (timeMs - currentHitObject.startTime) / currentHitObject.duration;
+        const timeRelativeMs = timeMs - currentHitObject.startTime;
+        const progress = timeRelativeMs / currentHitObject.duration;
+
         return {
           pos: currentHitObject.path
             .curvePositionAt(progress, currentHitObject.spans)
             .add(currentHitObject.stackedStartPosition),
           expanded: true,
         };
-      } else {
-        return {
-          pos: currentHitObject.stackedEndPosition,
-          expanded: true,
-        };
       }
-    } else if (nextHitObject) {
-      let clickDuration;
+      
+      return {
+        pos: currentHitObject.stackedEndPosition,
+        expanded: true,
+      };
+    }
+    
+    if (nextHitObject) {
+      let clickDuration = 0;
 
-      if (currentHitObject instanceof Slider) {
-        clickDuration = 0;
-      } else {
+      if (!(currentHitObject instanceof Slider)) {
         clickDuration = Math.min(
           MAX_CLICK_DURATION,
           (nextHitObject.startTime - currentEndTime) * MAX_CLICK_PROPORTION
         );
       }
-      const clickEnd = currentEndTime + clickDuration;
 
+      const clickEnd = currentEndTime + clickDuration;
       const travelEnd = nextHitObject.startTime;
 
       // Don't move before a hit object is visible
@@ -107,13 +109,13 @@ export default class CursorAutoplay extends Cursor {
         ),
         expanded: timeMs < clickEnd,
       };
-    } else {
-      // Song ended
-      return {
-        pos: currentHitObject.stackedEndPosition,
-        expanded: false,
-      };
     }
+
+    // Song ended
+    return {
+      pos: currentHitObject.stackedEndPosition,
+      expanded: false,
+    };
   }
 
   update(timeMs: number) {
@@ -122,5 +124,18 @@ export default class CursorAutoplay extends Cursor {
     this.expanded = cursorState.expanded;
 
     super.update(timeMs);
+  }
+
+  private getNextHitObjectIndex(timeMs: number): number {
+    const index = this.nextHitObjectIndex;
+
+    if (index && timeMs >= this.hitObjects[index - 1].startTime) {
+      return this.nextHitObjectIndex;
+    }
+
+    const found = BinarySearch
+      .findIndex(this.hitObjects, (h) => timeMs < h.startTime);
+
+    return found >= 0 ? found : 0;
   }
 }

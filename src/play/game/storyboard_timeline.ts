@@ -16,10 +16,13 @@ import {
 } from "osu-classes";
 
 import { Container, Texture } from "pixi.js";
+import { Howl } from "howler";
 
 import {
   AudioObjectTimeline,
   DisplayObjectTimeline,
+  IPlayable,
+  IUpdatable,
   TimelineElement,
 } from "./timeline";
 
@@ -29,9 +32,11 @@ import { DrawableStoryboardAnimation } from "../render/common/storyboard_animati
 import { DrawableStoryboardSprite } from "../render/common/storyboard_sprite";
 import { LoadedBeatmap } from "../loader/util";
 import { PlayableStoryboardSample } from "../render/common/storyboard_sample";
-import { Howl } from "howler";
 
-export class StoryboardLayerTimeline extends Container {
+export class StoryboardLayerTimeline 
+  extends Container 
+  implements IPlayable, IUpdatable 
+{
   private displayTimeline: DisplayObjectTimeline;
   private audioTimeline: AudioObjectTimeline;
   private storyboardImages: Map<string, Texture>;
@@ -152,7 +157,7 @@ export class StoryboardLayerTimeline extends Container {
     };
   }
 
-  public update(timeMs: number) {
+  update(timeMs: number) {
     this.childOrderDirty = false;
     
     this.displayTimeline.update(timeMs);
@@ -161,5 +166,25 @@ export class StoryboardLayerTimeline extends Container {
     if (this.childOrderDirty) {
       this.displayTimeline.sortChildren();
     }
+  }
+
+  play(): void {
+    this.audioTimeline.play();
+  }
+
+  pause(): void {
+    this.audioTimeline.pause();
+  }
+
+  seek(timeMs: number): void {
+    this.audioTimeline.seek(timeMs);
+  }
+
+  rate(rate: number): void {
+    this.storyboardSamples.forEach((s) => s.rate(rate));
+  }
+
+  volume(volume: number): void {
+    this.storyboardSamples.forEach((s) => s.volume(volume))
   }
 }
