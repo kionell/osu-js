@@ -182,7 +182,6 @@ export class SliderPiece extends Container implements IUpdatable {
       1,
       0
     );
-    this.sliderPathSprite.endProp = MathUtils.clamp01(enterTime / this.fadeIn);
 
     const sliderProgress = MathUtils.clamp01(
       timeRelativeMs / this.hitObject.duration
@@ -191,6 +190,11 @@ export class SliderPiece extends Container implements IUpdatable {
       sliderProgress,
       this.hitObject.spans
     );
+
+    // This needs to be set explicitly to make already drawn slider path "seekable".
+    this.sliderPathSprite.startProp = 0;
+    this.sliderPathSprite.endProp = MathUtils.clamp01(enterTime / this.fadeIn);
+
     const finalSpan = sliderProgress > 1 - 1 / this.hitObject.spans;
 
     const sliderActive = timeRelativeMs >= 0;
