@@ -1,4 +1,5 @@
 import { Vector2 } from "osu-classes";
+import { Slider } from "osu-standard-stable";
 import {
   Bounds,
   Container,
@@ -17,7 +18,6 @@ import {
 
 import SDF_LINE_VERT from "./slider_path.vert?raw";
 import SDF_LINE_FRAG from "./slider_path.frag?raw";
-import { Slider } from "osu-standard-stable";
 import { VIRTUAL_SCREEN_MASK } from "../../../constants";
 
 // https://www.shadertoy.com/view/lsdBDS Quadratic Bezier SDF
@@ -61,6 +61,7 @@ export class SliderPathSprite extends Container {
   private radius!: number;
   private padding!: number;
 
+  private firstTimeRendered = false;
   private overallBounds!: Rectangle;
   private textureBounds!: Rectangle;
 
@@ -81,6 +82,8 @@ export class SliderPathSprite extends Container {
   }
 
   updateTransform(): void {
+    super.updateTransform();
+
     const mask = new Bounds();
     const virtualScreenRect = VIRTUAL_SCREEN_MASK.getBounds(true);
 
@@ -106,18 +109,27 @@ export class SliderPathSprite extends Container {
     );
 
     this.sprite.x = this.overallBounds.x - this.points[0].x;
-    this.sprite.y = this.overallBounds.y - this.points[0].x;
-
-    super.updateTransform();
+    this.sprite.y = this.overallBounds.y - this.points[0].y;
   }
 
   _render(renderer: Renderer): void {
+    /**
+     * Setting the sprite position is deffered to the next render call,
+     * causing the sprite to initially render at the wrong coordinates.
+     * This additional transform update somehow fixes the problem.
+     */
+    if (!this.firstTimeRendered) {
+      this.updateTransform();
+      this.firstTimeRendered = true;
+    }
+
     const renderState: RenderState = {
       // prettier-ignore
       resolution: (this.worldTransform.a + this.worldTransform.d) / 2 * renderer.resolution,
       startProp: this.startProp,
       endProp: this.endProp,
     };
+
     if (
       !this.lastRenderState ||
       this.lastRenderState.resolution != renderState.resolution ||
