@@ -6,7 +6,7 @@ import {
   VIRTUAL_SCREEN,
 } from "../../constants";
 import { LoadedBeatmap } from "../../loader/util";
-import { IPlayable, IUpdatable } from "../../game/timeline";
+import { IUpdatable } from "../../game/timeline";
 import { LayerType, StoryboardVideo } from "osu-classes";
 import { VideoPlayerFFmpeg } from "./video/video_player_ffmpeg";
 import { VideoPlayerHTML5 } from "./video/video_player_html5";
@@ -15,7 +15,7 @@ const VIDEO_PRELOAD_TIME_MS = 1000;
 
 export class StoryboardVideoPlayer 
   extends Container 
-  implements IUpdatable, IPlayable
+  implements IUpdatable
 {
   private background: Sprite | undefined;
   private videoURLs: Map<string, string | null>;
@@ -98,21 +98,5 @@ export class StoryboardVideoPlayer
         this.activeVideoObject = null;
       }
     }
-  }
-
-  play(): void {
-    return;
-  }
-  pause(): void {
-    return;
-  }
-  seek(timeMs: number): void {
-    return;
-  }
-  rate(rate: number): void {
-    return;
-  }
-  volume(volume: number): void {
-    return;
   }
 }

@@ -225,7 +225,7 @@ export class StandardGame extends Container implements IPlayable {
       this.audio.seek(this.timeElapsedMs / 1000);
     }
 
-    this.storyboardVideo.seek(clampedTimeMs);
+    // this.storyboardVideo.seek(clampedTimeMs);
     this.storyboardBackground.seek(clampedTimeMs);
     this.storyboardPass.seek(clampedTimeMs);
     this.storyboardForeground.seek(clampedTimeMs);
@@ -235,7 +235,7 @@ export class StandardGame extends Container implements IPlayable {
   public rate(rate: number): void {
     const clampedRate = MathUtils.clamp(rate, GAME_MIN_RATE, GAME_MAX_RATE);
 
-    this.storyboardVideo.rate(clampedRate);
+    // this.storyboardVideo.rate(clampedRate);
     this.storyboardBackground.rate(clampedRate);
     this.storyboardPass.rate(clampedRate);
     this.storyboardForeground.rate(clampedRate);
@@ -249,7 +249,7 @@ export class StandardGame extends Container implements IPlayable {
   }
 
   public pause(): void {
-    this.storyboardVideo.pause();
+    // this.storyboardVideo.pause();
     this.storyboardBackground.pause();
     this.storyboardPass.pause();
     this.storyboardForeground.pause();
@@ -263,7 +263,7 @@ export class StandardGame extends Container implements IPlayable {
   }
 
   public play(): void {
-    this.storyboardVideo.play();
+    // this.storyboardVideo.play();
     this.storyboardBackground.play();
     this.storyboardPass.play();
     this.storyboardForeground.play();
@@ -288,7 +288,7 @@ export class StandardGame extends Container implements IPlayable {
   public volume(volume: number): void {
     const clampedVolume = MathUtils.clamp01(volume);
 
-    this.storyboardVideo.volume(clampedVolume);
+    // this.storyboardVideo.volume(clampedVolume);
     this.storyboardBackground.volume(clampedVolume);
     this.storyboardPass.volume(clampedVolume);
     this.storyboardForeground.volume(clampedVolume);
