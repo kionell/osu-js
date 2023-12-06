@@ -57,62 +57,69 @@ export const loadBeatmapStep =
         async execute(cb) {
           cb(0, "Downloading Beatmap");
 
-          const url = `https://chimu.moe/d/${info.beatmapset_id}`;
-          let cache: Cache | null = null;
-          try {
-            cache = await caches.open("cache");
-            const cachedRes = await cache.match(url);
+          const urls = [
+            `https://chimu.moe/d/${info.beatmapset_id}`,
+            `https://api.nerinyan.moe/d/${info.beatmapset_id}`,
+            `https://catboy.best/d/${info.beatmapset_id}`,
+          ];
 
-            if (cachedRes) {
-              console.log(cachedRes);
-              const timestamp = cachedRes.headers.get(CACHE_HEADER_TIMESTAMP);
-              const age = (Date.now() - Number(timestamp)) / 1000;
-              if (!timestamp || age > BEATMAP_CACHE_TTL) {
-                //prettier-ignore
-                console.log(`Purging stale cache entry for "${url}" (Age: ${age.toFixed(0)}s)`);
-                // TODO: Also purge cache entries for other beatmapsets
-                await cache.delete(url);
-              } else {
-                //prettier-ignore
-                console.log(`Using cached beatmapset from "${url}" (Age: ${age.toFixed(0)}s)`);
-                blob = await cachedRes.blob();
-                return;
-              }
-            }
-          } catch (error) {
-            console.error("Error getting beatmapset from cache", error);
-          }
-
-          const interceptor = fetchProgress({
-            onProgress(progress) {
-              const speed = `${(progress.speed / 1048576).toFixed(2)} MiB/s`;
-              if (progress.total) {
-                const prop = progress.transferred / progress.total;
-                //prettier-ignore
-                cb(prop, `Downloading Beatmap (${(prop * 100).toFixed(0)}%, ${speed})`);
-              } else {
-                cb(0.5, `Downloading Beatmap (${speed})`);
-              }
-            },
-          });
-          let response = await interceptor(await fetch(url));
-
-          if (!response.ok) {
-            throw new Error(
-              `Error downloading beatmap: Got status ${response.status}`
-            );
-          } else {
-            blob = await response.blob();
-
-            const headers = new Headers();
-            headers.set(CACHE_HEADER_TIMESTAMP, Date.now().toString());
+          for (const url of urls) {
+            let cache: Cache | null = null;
             try {
-              await cache?.put(
-                new Request(url),
-                new Response(blob, { headers })
-              );
+              cache = await caches.open("cache");
+              const cachedRes = await cache.match(url);
+
+              if (cachedRes) {
+                console.log(cachedRes);
+                const timestamp = cachedRes.headers.get(CACHE_HEADER_TIMESTAMP);
+                const age = (Date.now() - Number(timestamp)) / 1000;
+                if (!timestamp || age > BEATMAP_CACHE_TTL) {
+                  //prettier-ignore
+                  console.log(`Purging stale cache entry for "${url}" (Age: ${age.toFixed(0)}s)`);
+                  // TODO: Also purge cache entries for other beatmapsets
+                  await cache.delete(url);
+                } else {
+                  //prettier-ignore
+                  console.log(`Using cached beatmapset from "${url}" (Age: ${age.toFixed(0)}s)`);
+                  blob = await cachedRes.blob();
+                  return;
+                }
+              }
             } catch (error) {
-              console.error("Error saving beatmapset to cache", error);
+              console.error("Error getting beatmapset from cache", error);
+            }
+
+            const interceptor = fetchProgress({
+              onProgress(progress) {
+                const speed = `${(progress.speed / 1048576).toFixed(2)} MiB/s`;
+                if (progress.total) {
+                  const prop = progress.transferred / progress.total;
+                  //prettier-ignore
+                  cb(prop, `Downloading Beatmap (${(prop * 100).toFixed(0)}%, ${speed})`);
+                } else {
+                  cb(0.5, `Downloading Beatmap (${speed})`);
+                }
+              },
+            });
+            let response = await interceptor(await fetch(url));
+
+            if (!response.ok) {
+              throw new Error(
+                `Error downloading beatmap: Got status ${response.status}`
+              );
+            } else {
+              blob = await response.blob();
+
+              const headers = new Headers();
+              headers.set(CACHE_HEADER_TIMESTAMP, Date.now().toString());
+              try {
+                await cache?.put(
+                  new Request(url),
+                  new Response(blob, { headers })
+                );
+              } catch (error) {
+                console.error("Error saving beatmapset to cache", error);
+              }
             }
           }
         },
