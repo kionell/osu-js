@@ -101,25 +101,31 @@ export const loadBeatmapStep =
                 }
               },
             });
-            let response = await interceptor(await fetch(url));
 
-            if (!response.ok) {
-              throw new Error(
-                `Error downloading beatmap: Got status ${response.status}`
-              );
-            } else {
-              blob = await response.blob();
+            try {
+              let response = await interceptor(await fetch(url));
 
-              const headers = new Headers();
-              headers.set(CACHE_HEADER_TIMESTAMP, Date.now().toString());
-              try {
-                await cache?.put(
-                  new Request(url),
-                  new Response(blob, { headers })
+              if (!response.ok) {
+                throw new Error(
+                  `Error downloading beatmap: Got status ${response.status}`
                 );
-              } catch (error) {
-                console.error("Error saving beatmapset to cache", error);
+              } else {
+                blob = await response.blob();
+  
+                const headers = new Headers();
+                headers.set(CACHE_HEADER_TIMESTAMP, Date.now().toString());
+                try {
+                  await cache?.put(
+                    new Request(url),
+                    new Response(blob, { headers })
+                  );
+                } catch (error) {
+                  console.error("Error saving beatmapset to cache", error);
+                }
               }
+            }
+            catch {
+              continue;
             }
           }
         },
